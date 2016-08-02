@@ -150,14 +150,18 @@ class Patches implements PluginInterface, EventSubscriberInterface {
     // Now add all the patches from dependencies that will be installed.
     $operations = $event->getOperations();
     $this->io->write('<info>Gathering patches for dependencies. This might take a minute.</info>');
-    $this->io->write('<info>There are ' . count($operations) . ' operations. </info>');
     foreach ($operations as $operation) {
-      $this->io->write('<info>Job type is ' . $operation->getJobType() . '.</info>');
       if ($operation->getJobType() == 'install' || $operation->getJobType() == 'update') {
         $package = $this->getPackageFromOperation($operation);
-        $this->io->write('<info>Package is ' . (string) $package . '.</info>');
         $extra = $package->getExtra();
-        $this->io->write('<info>Extra info is ' . print_r($extra) . '</info>');
+        // Packages that were removed for re-download and re-patching must have their patch information reset.
+        if (!isset($extra['patches']) && !array_key_exists($package->getName(), $this->patches) && isset($extra['patches_applied'])) {
+          if ($this->io->isVerbose()) {
+            $this->io->write('<info>Resetting patch information for re-downloaded package ' . $package . '.</info>');
+          }
+          $extra['patches'][$package->getName()] = $extra['patches_applied'];
+          unset($extra['patches_applied']);
+        }
         if (isset($extra['patches'])) {
           $this->patches = array_merge_recursive($this->patches, $extra['patches']);
         }
@@ -172,6 +176,7 @@ class Patches implements PluginInterface, EventSubscriberInterface {
       }
     }
 
+    print_r($this->patches);
     // Make sure we don't gather patches again. Extra keys in $this->patches
     // won't hurt anything, so we'll just stash it there.
     $this->patches['_patchesGathered'] = TRUE;
