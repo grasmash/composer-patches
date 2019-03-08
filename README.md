@@ -40,6 +40,23 @@ Example composer.json:
 
 ```
 
+## Using a locally committed patch file
+
+Instead of a URL, you can specify a path to your patch file relative to the directory that your composer.json is in. For instance, if the patch file is in the same directory as your composer.json, the URL would be either 'add_a_startup-1543858-30.patch' or './add_a_startup-1543858-30.patch'.
+
+```json
+{
+  "extra": {
+    "patches": {
+      "drupal/drupal": {
+        "Add startup configuration for PHP server": "./add_a_startup-1543858-30.patch"
+      }
+    }
+  }
+}
+
+```
+
 ## Using an external patch file
 
 Instead of a patches key in your root composer.json, use a patches-file key.
